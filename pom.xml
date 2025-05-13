@@ -87,11 +87,7 @@
 	        <scope>provided</scope>
 	    </dependency>
 
-		<dependency>
-			<groupId>com.polania</groupId>
-			<artifactId>cambios</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-		</dependency>
+
 	</dependencies>
 
 	<build>
