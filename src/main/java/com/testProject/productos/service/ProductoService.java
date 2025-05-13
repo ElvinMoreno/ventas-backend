@@ -10,7 +10,7 @@ import com.testProject.productos.dto.ProductoCompletoDTO.VarianteDTO;
 import com.testProject.productos.dto.ProductoConsultaDTO;
 import com.testProject.productos.dto.ProductoImagenDTO;
 import com.testProject.productos.dto.ProductoRequestDTO;
-
+import com.testProject.productos.dto.ProductoResponseDTO;
 import com.testProject.productos.model.*;
 import com.testProject.productos.repository.*;
 
@@ -285,8 +285,7 @@ public class ProductoService {
     }
     
     @Transactional
-    public Producto crearProductoConVariante(ProductoRequestDTO request) {
-        
+    public ProductoResponseDTO crearProductoConVariante(ProductoRequestDTO request) {
         Categoria categoria = categoriaRepository.findByNombre(request.getCategoria())
                 .orElseGet(() -> {
                     Categoria nueva = new Categoria();
@@ -294,7 +293,6 @@ public class ProductoService {
                     return categoriaRepository.save(nueva);
                 });
 
-      
         Color color = colorRepository.findByNombre(request.getColor())
                 .orElseGet(() -> {
                     Color nuevo = new Color();
@@ -302,7 +300,6 @@ public class ProductoService {
                     return colorRepository.save(nuevo);
                 });
 
-       
         Talla talla = tallaRepository.findByNombre(request.getTalla())
                 .orElseGet(() -> {
                     Talla nueva = new Talla();
@@ -310,7 +307,6 @@ public class ProductoService {
                     return tallaRepository.save(nueva);
                 });
 
-        
         Producto producto = productoRepository.findFirstByNombre(request.getNombre())
                 .stream()
                 .findFirst()
@@ -319,22 +315,20 @@ public class ProductoService {
                     nuevo.setNombre(request.getNombre());
                     nuevo.setPrecio(request.getPrecio());
                     nuevo.setCategoria(categoria);
-                    nuevo.setStockTotal(0); 
+                    nuevo.setStockTotal(0);
                     return productoRepository.save(nuevo);
                 });
 
-        
         ProductoColor productoColor = productoColorRepository
                 .findByProductoAndColor(producto, color)
                 .orElseGet(() -> {
                     ProductoColor nueva = new ProductoColor();
                     nueva.setProducto(producto);
                     nueva.setColor(color);
-                    nueva.setStockColor(0); 
+                    nueva.setStockColor(0);
                     return productoColorRepository.save(nueva);
                 });
 
-     
         ProductoTalla productoTalla = productoTallaRepository
                 .findByProductoColorAndTalla(productoColor, talla)
                 .orElseGet(() -> {
@@ -345,12 +339,17 @@ public class ProductoService {
                     return productoTallaRepository.save(nueva);
                 });
 
-       
         productoTalla.setStock(productoTalla.getStock() + request.getStock());
         productoTallaRepository.save(productoTalla);
 
-        
-        return producto;
+        return new ProductoResponseDTO(
+                producto.getNombre(),
+                producto.getPrecio(),
+                categoria.getNombre(),
+                color.getNombre(),
+                talla.getNombre(),
+                productoTalla.getStock()
+        );
     }
     
 

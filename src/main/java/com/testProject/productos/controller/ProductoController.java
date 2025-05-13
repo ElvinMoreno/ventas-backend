@@ -14,7 +14,7 @@ import com.testProject.productos.dto.ProductoCompletoDTO;
 import com.testProject.productos.dto.ProductoConsultaDTO;
 import com.testProject.productos.dto.ProductoImagenDTO;
 import com.testProject.productos.dto.ProductoRequestDTO;
-
+import com.testProject.productos.dto.ProductoResponseDTO;
 import com.testProject.productos.model.Producto;
 import com.testProject.productos.service.ProductoService;
 
@@ -90,12 +90,14 @@ public class ProductoController {
 
     
     @PostMapping
-    public ResponseEntity<Producto> crearProducto(@RequestBody ProductoRequestDTO request) {
+    public ResponseEntity<ApiResponseDTO<ProductoResponseDTO>> crearProducto(@RequestBody ProductoRequestDTO request) {
         try {
-            Producto producto = productoService.crearProductoConVariante(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(producto);
+            ProductoResponseDTO resultado = productoService.crearProductoConVariante(request);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(ApiResponseDTO.success(resultado));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest()
+                    .body(ApiResponseDTO.notFound("Error al crear el producto: " + e.getMessage()));
         }
     }
        
