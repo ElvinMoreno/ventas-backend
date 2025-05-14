@@ -30,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -92,15 +93,13 @@ public class ProductoService {
     
 
     public List<ProductoCompletoDTO> obtenerTodosLosProductos() {
-    
+       
         List<Long> ids = productoRepository.findAllProductIds();
         
-  
+
         List<Producto> productos = productoRepository.findAllWithColoresByIds(ids);
         
-      
         List<ProductoColor> colores = productoColorRepository.findAllWithTallasByProductoIds(ids);
-        
       
         Map<Long, Producto> productoMap = productos.stream()
             .collect(Collectors.toMap(Producto::getId, Function.identity()));
@@ -109,13 +108,18 @@ public class ProductoService {
         colores.forEach(pc -> {
             Producto p = productoMap.get(pc.getProducto().getId());
             if (p != null) {
-                p.getColores().add(pc);
+              
+                boolean colorExiste = p.getColores().stream()
+                    .anyMatch(existente -> existente.getId().equals(pc.getId()));
+                
+                if (!colorExiste) {
+                    p.getColores().add(pc);
+                }
             }
         });
-        
-
-        return ids.stream()
-            .map(id -> mapearProductoADTO(productoMap.get(id)))
+      
+        return productoMap.values().stream()
+            .map(this::mapearProductoADTO)
             .collect(Collectors.toList());
     }
 
@@ -266,19 +270,12 @@ public class ProductoService {
             dto.setColoresDisponibles(colores);
         }
     }
-
-
-
-
     
 
     public Producto guardarProducto(Producto producto) {
         return productoRepository.save(producto);
     }
-    
-
-
-
+   
 
     public Optional<Producto> obtenerProductoPorNombre(String nombre) {
         return productoRepository.findFirstByNombre(nombre);
@@ -365,17 +362,22 @@ public class ProductoService {
         }
         
         if(producto.getColores() != null) {
-            List<VarianteDTO> variantes = producto.getColores().stream()
-                .flatMap(pc -> pc.getTallas().stream()
-                    .map(pt -> {
+
+            Set<VarianteDTO> variantesUnicas = new HashSet<>();
+            
+            producto.getColores().forEach(pc -> {
+                if (pc.getTallas() != null) {
+                    pc.getTallas().forEach(pt -> {
                         VarianteDTO v = new VarianteDTO();
                         v.setColor(pc.getColor() != null ? pc.getColor().getNombre() : "Sin color");
                         v.setTalla(pt.getTalla() != null ? pt.getTalla().getNombre() : "Sin talla");
                         v.setStock(pt.getStock());
-                        return v;
-                    }))
-                .collect(Collectors.toList());
-            dto.setVariantes(variantes);
+                        variantesUnicas.add(v);
+                    });
+                }
+            });
+            
+            dto.setVariantes(new ArrayList<>(variantesUnicas));
         }
         
         return dto;

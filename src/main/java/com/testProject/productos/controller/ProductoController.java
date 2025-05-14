@@ -45,7 +45,14 @@ public class ProductoController {
 
     @GetMapping("/todos")
     public ResponseEntity<List<ProductoCompletoDTO>> obtenerTodosLosProductosSinPaginacion() {
-        return ResponseEntity.ok(productoService.obtenerTodosLosProductos());
+        List<ProductoCompletoDTO> productos = productoService.obtenerTodosLosProductos();
+        
+        productos.forEach(p -> {
+            long count = p.getVariantes().stream().distinct().count();
+
+        });
+        
+        return ResponseEntity.ok(productos);
     }
     
 

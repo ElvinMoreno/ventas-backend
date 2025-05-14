@@ -56,11 +56,13 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
      Page<Producto> findAllWithVariantes(Pageable pageable);
      
      @Query("SELECT DISTINCT p FROM Producto p " +
-             "LEFT JOIN FETCH p.colores pc " +
-             "LEFT JOIN FETCH pc.tallas " +
-             "LEFT JOIN FETCH p.categoria " +
-             "WHERE p.id IN :ids")
-      List<Producto> findAllWithVariantesByIds(@Param("ids") List<Long> ids);
+    	       "LEFT JOIN FETCH p.colores pc " +
+    	       "LEFT JOIN FETCH pc.tallas pt " +
+    	       "LEFT JOIN FETCH p.categoria " +
+    	       "LEFT JOIN FETCH pc.color " +
+    	       "LEFT JOIN FETCH pt.talla " +
+    	       "WHERE p.id IN :ids")
+    	List<Producto> findAllWithVariantesByIds(@Param("ids") List<Long> ids);
      
      @Query("SELECT p FROM Producto p LEFT JOIN p.colores LEFT JOIN p.categoria")
      Page<Producto> findAllForPagination(Pageable pageable);
