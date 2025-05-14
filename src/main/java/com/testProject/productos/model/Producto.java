@@ -1,12 +1,12 @@
 package com.testProject.productos.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 @Entity
 @Table(name = "productos")
 @Data
@@ -34,9 +34,8 @@ public class Producto {
     private Categoria categoria;
 
     @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ProductoColor> colores;
-    
-  
+    private List<ProductoColor> colores = new ArrayList<>();
+
     public void actualizarStockTotal() {
         this.stockTotal = colores.stream()
                 .mapToInt(ProductoColor::getStockColor)

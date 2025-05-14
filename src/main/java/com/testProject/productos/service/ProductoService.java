@@ -284,73 +284,76 @@ public class ProductoService {
     @Transactional
     public ProductoResponseDTO crearProductoConVariante(ProductoRequestDTO request) {
 
-        Double precio = request.getPrecio() != null ? request.getPrecio() : productoRepository.findFirstByNombre(request.getNombre())
-                .map(Producto::getPrecio)
-                .orElse(0.0);
+        Optional<Producto> productoExistente = productoRepository.findByNombreAndCategoriaNombre(
+            request.getNombre(), 
+            request.getCategoria()
+        ).stream().findFirst();
+
+        Double precio = request.getPrecio() != null ? request.getPrecio() : 
+            productoExistente.map(Producto::getPrecio).orElse(0.0);
 
         Categoria categoria = categoriaRepository.findByNombre(request.getCategoria())
-                .orElseGet(() -> {
-                    Categoria nueva = new Categoria();
-                    nueva.setNombre(request.getCategoria());
-                    return categoriaRepository.save(nueva);
-                });
+            .orElseGet(() -> {
+                Categoria nueva = new Categoria();
+                nueva.setNombre(request.getCategoria());
+                return categoriaRepository.save(nueva);
+            });
 
         Color color = colorRepository.findByNombre(request.getColor())
-                .orElseGet(() -> {
-                    Color nuevo = new Color();
-                    nuevo.setNombre(request.getColor());
-                    return colorRepository.save(nuevo);
-                });
+            .orElseGet(() -> {
+                Color nuevo = new Color();
+                nuevo.setNombre(request.getColor());
+                return colorRepository.save(nuevo);
+            });
 
         Talla talla = tallaRepository.findByNombre(request.getTalla())
-                .orElseGet(() -> {
-                    Talla nueva = new Talla();
-                    nueva.setNombre(request.getTalla());
-                    return tallaRepository.save(nueva);
-                });
+            .orElseGet(() -> {
+                Talla nueva = new Talla();
+                nueva.setNombre(request.getTalla());
+                return tallaRepository.save(nueva);
+            });
 
-        Producto producto = productoRepository.findFirstByNombre(request.getNombre())
-                .map(p -> {
+        Producto producto = productoExistente
+        	    .map(p -> {
+        	        if (!p.getPrecio().equals(precio)) {
+        	            p.setPrecio(precio);
+        	            return productoRepository.save(p);
+        	        }
+        	        return p;
+        	    })
+        	    .orElseGet(() -> {
+        	        Producto nuevo = new Producto();
+        	        nuevo.setNombre(request.getNombre());
+        	        nuevo.setPrecio(precio);
+        	        nuevo.setCategoria(categoria);
+        	        nuevo.setStockTotal(0);
+        	        nuevo.setColores(new ArrayList<>()); 
+        	        return productoRepository.save(nuevo);
+        	    });
 
-                    if (!p.getPrecio().equals(precio)) {
-                        p.setPrecio(precio);
-                    }
-                    if (!p.getCategoria().getNombre().equals(categoria.getNombre())) {
-                        p.setCategoria(categoria);
-                    }
-                    return productoRepository.save(p);
-                })
-                .orElseGet(() -> {
-                    Producto nuevo = new Producto();
-                    nuevo.setNombre(request.getNombre());
-                    nuevo.setPrecio(precio);
-                    nuevo.setCategoria(categoria);
-                    nuevo.setStockTotal(0);
-                    nuevo.setColores(new ArrayList<>()); // Initialize the colores list
-                    return productoRepository.save(nuevo);
-                });
 
 
         ProductoColor productoColor = productoColorRepository
-                .findByProductoAndColor(producto, color)
-                .orElseGet(() -> {
-                    ProductoColor nueva = new ProductoColor();
-                    nueva.setProducto(producto);
-                    nueva.setColor(color);
-                    nueva.setStockColor(0);
-                    nueva.setTallas(new ArrayList<>()); // Initialize the tallas list
-                    return productoColorRepository.save(nueva);
-                });
+            .findByProductoAndColor(producto, color)
+            .orElseGet(() -> {
+                ProductoColor nueva = new ProductoColor();
+                nueva.setProducto(producto);
+                nueva.setColor(color);
+                nueva.setStockColor(0);
+                nueva.setTallas(new ArrayList<>()); 
+                return productoColorRepository.save(nueva);
+            });
+
 
         ProductoTalla productoTalla = productoTallaRepository
-                .findByProductoColorAndTalla(productoColor, talla)
-                .orElseGet(() -> {
-                    ProductoTalla nueva = new ProductoTalla();
-                    nueva.setProductoColor(productoColor);
-                    nueva.setTalla(talla);
-                    nueva.setStock(0);
-                    return productoTallaRepository.save(nueva);
-                });
+            .findByProductoColorAndTalla(productoColor, talla)
+            .orElseGet(() -> {
+                ProductoTalla nueva = new ProductoTalla();
+                nueva.setProductoColor(productoColor);
+                nueva.setTalla(talla);
+                nueva.setStock(0);
+                return productoTallaRepository.save(nueva);
+            });
 
         productoTalla.setStock(productoTalla.getStock() + request.getStock());
         productoTallaRepository.save(productoTalla);
@@ -359,14 +362,14 @@ public class ProductoService {
         producto.actualizarStockTotal();
 
         return new ProductoResponseDTO(
-                producto.getNombre(),
-                producto.getPrecio(),
-                producto.getCategoria().getNombre(),
-                color.getNombre(),
-                talla.getNombre(),
-                productoTalla.getStock()
+            producto.getNombre(),
+            producto.getPrecio(),
+            producto.getCategoria().getNombre(),
+            color.getNombre(),
+            talla.getNombre(),
+            productoTalla.getStock()
         );
-    }; 
+    }  
     
 
     private ProductoCompletoDTO mapearProductoADTO(Producto producto) {

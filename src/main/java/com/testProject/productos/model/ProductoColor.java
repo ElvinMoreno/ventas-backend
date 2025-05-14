@@ -36,8 +36,8 @@ public class ProductoColor {
     
 
     public void actualizarStockColor() {
-        this.stockColor = tallas.stream()
-                .mapToInt(ProductoTalla::getStock)
-                .sum();
+        this.stockColor = (tallas != null) ? 
+            tallas.stream().mapToInt(ProductoTalla::getStock).sum() : 
+            0;
     }
 }
