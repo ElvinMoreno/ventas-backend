@@ -1,4 +1,4 @@
-package com.testProject.productos_backend;
+package com.testProject.productos;  
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -13,6 +13,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @EnableJpaRepositories(basePackages = "com.testProject.productos.repository")
 @EntityScan(basePackages = "com.testProject.productos.model")
 public class ProductosBackendApplication {
+
     public static void main(String[] args) {
         SpringApplication.run(ProductosBackendApplication.class, args);
     }
