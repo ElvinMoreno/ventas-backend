@@ -18,9 +18,13 @@ import com.testProject.productos.dto.ProductoResponseDTO;
 import com.testProject.productos.model.Producto;
 import com.testProject.productos.service.ProductoService;
 
+import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
+
 
 @RestController
 @RequestMapping("/api/productos")
+@Slf4j 
 public class ProductoController {
     private final ProductoService productoService;
 
@@ -97,14 +101,26 @@ public class ProductoController {
 
     
     @PostMapping
-    public ResponseEntity<ApiResponseDTO<ProductoResponseDTO>> crearProducto(@RequestBody ProductoRequestDTO request) {
+    public ResponseEntity<ApiResponseDTO<ProductoResponseDTO>> crearProducto(
+            @Valid @RequestBody ProductoRequestDTO request) {
+        
         try {
+       
+            if (request.getPrecio() != null && request.getPrecio() <= 0) {
+                throw new IllegalArgumentException("El precio debe ser mayor a cero");
+            }
+            
             ProductoResponseDTO resultado = productoService.crearProductoConVariante(request);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(ApiResponseDTO.success(resultado));
-        } catch (Exception e) {
+                    
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
-                    .body(ApiResponseDTO.notFound("Error al crear el producto: " + e.getMessage()));
+                    .body(ApiResponseDTO.notFound(e.getMessage()));
+        } catch (Exception e) {
+            log.error("Error al crear producto", e);
+            return ResponseEntity.internalServerError()
+                    .body(ApiResponseDTO.notFound("Error interno al crear el producto"));
         }
     }
        

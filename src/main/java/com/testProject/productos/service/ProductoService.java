@@ -283,6 +283,11 @@ public class ProductoService {
     
     @Transactional
     public ProductoResponseDTO crearProductoConVariante(ProductoRequestDTO request) {
+
+        Double precio = request.getPrecio() != null ? request.getPrecio() : productoRepository.findFirstByNombre(request.getNombre())
+                .map(Producto::getPrecio)
+                .orElse(0.0);
+
         Categoria categoria = categoriaRepository.findByNombre(request.getCategoria())
                 .orElseGet(() -> {
                     Categoria nueva = new Categoria();
@@ -305,16 +310,26 @@ public class ProductoService {
                 });
 
         Producto producto = productoRepository.findFirstByNombre(request.getNombre())
-                .stream()
-                .findFirst()
+                .map(p -> {
+
+                    if (!p.getPrecio().equals(precio)) {
+                        p.setPrecio(precio);
+                    }
+                    if (!p.getCategoria().getNombre().equals(categoria.getNombre())) {
+                        p.setCategoria(categoria);
+                    }
+                    return productoRepository.save(p);
+                })
                 .orElseGet(() -> {
                     Producto nuevo = new Producto();
                     nuevo.setNombre(request.getNombre());
-                    nuevo.setPrecio(request.getPrecio());
+                    nuevo.setPrecio(precio);
                     nuevo.setCategoria(categoria);
                     nuevo.setStockTotal(0);
+                    nuevo.setColores(new ArrayList<>()); // Initialize the colores list
                     return productoRepository.save(nuevo);
                 });
+
 
         ProductoColor productoColor = productoColorRepository
                 .findByProductoAndColor(producto, color)
@@ -323,6 +338,7 @@ public class ProductoService {
                     nueva.setProducto(producto);
                     nueva.setColor(color);
                     nueva.setStockColor(0);
+                    nueva.setTallas(new ArrayList<>()); // Initialize the tallas list
                     return productoColorRepository.save(nueva);
                 });
 
@@ -339,15 +355,18 @@ public class ProductoService {
         productoTalla.setStock(productoTalla.getStock() + request.getStock());
         productoTallaRepository.save(productoTalla);
 
+        productoColor.actualizarStockColor();
+        producto.actualizarStockTotal();
+
         return new ProductoResponseDTO(
                 producto.getNombre(),
                 producto.getPrecio(),
-                categoria.getNombre(),
+                producto.getCategoria().getNombre(),
                 color.getNombre(),
                 talla.getNombre(),
                 productoTalla.getStock()
         );
-    }
+    }; 
     
 
     private ProductoCompletoDTO mapearProductoADTO(Producto producto) {

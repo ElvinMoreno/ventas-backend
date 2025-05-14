@@ -39,6 +39,5 @@ public class ProductoColor {
         this.stockColor = tallas.stream()
                 .mapToInt(ProductoTalla::getStock)
                 .sum();
-        producto.actualizarStockTotal();
     }
 }
