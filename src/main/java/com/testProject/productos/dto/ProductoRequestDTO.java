@@ -1,13 +1,26 @@
 package com.testProject.productos.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
 public class ProductoRequestDTO {
-	private String nombre;
-    private String talla;
-    private String color;
-    private Integer stock;
+    @NotBlank
+    private String nombre;
+    
+    @NotBlank
     private String categoria;
-    private Double precio; 
+    
+    @NotBlank
+    private String color;
+    
+    @NotBlank
+    private String talla;
+    
+    private Integer stock;
+    
+ 
+    private Double precio;
 }
+
+

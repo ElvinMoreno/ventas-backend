@@ -7,8 +7,12 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+
 @Entity
-@Table(name = "productos")
+@Table(name = "productos", 
+       uniqueConstraints = @UniqueConstraint(
+           columnNames = {"nombre", "categoria_id"}))
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -20,18 +24,15 @@ public class Producto {
     @Column(nullable = false, length = 100)
     private String nombre;
 
-    @Column(columnDefinition = "TEXT")
-    private String descripcion;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "categoria_id", nullable = false)
+    private Categoria categoria;
 
     @Column(nullable = false)
     private Double precio;
 
     @Column(nullable = false)
-    private Integer stockTotal; 
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "categoria_id")
-    private Categoria categoria;
+    private Integer stockTotal = 0;
 
     @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductoColor> colores = new ArrayList<>();

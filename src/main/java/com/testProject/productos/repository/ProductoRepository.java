@@ -1,5 +1,6 @@
 package com.testProject.productos.repository;
 
+import com.testProject.productos.model.Categoria;
 import com.testProject.productos.model.Producto;
 
 import org.springframework.data.domain.Page;
@@ -73,11 +74,12 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
      @Query("SELECT DISTINCT p FROM Producto p LEFT JOIN FETCH p.colores WHERE p.id IN :ids")
      List<Producto> findAllWithColoresByIds(@Param("ids") List<Long> ids);
      
-     @Query("SELECT p FROM Producto p JOIN p.categoria c " +
-    	       "WHERE p.nombre = :nombre AND c.nombre = :categoria")
-    	List<Producto> findByNombreAndCategoriaNombre(
-    	        @Param("nombre") String nombre,
-    	        @Param("categoria") String categoria);
+     Optional<Producto> findByNombreAndCategoria(String nombre, Categoria categoria);
+     
+     @Query("SELECT p FROM Producto p WHERE p.nombre = :nombre AND p.categoria.nombre = :categoria")
+     Optional<Producto> findByNombreAndCategoriaNombre(
+             @Param("nombre") String nombre,
+             @Param("categoria") String categoria);
      
      @Query("SELECT p.id FROM Producto p")
      List<Long> findAllProductIds();

@@ -13,7 +13,8 @@ public class ProductoResponseDTO {
     private String color;
     private String talla;
     private Integer stock;
-
+    
+    // Constructor
     public ProductoResponseDTO(String nombre, Double precio, String categoria, 
                              String color, String talla, Integer stock) {
         this.nombre = nombre;
