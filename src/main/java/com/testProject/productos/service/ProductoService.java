@@ -330,15 +330,21 @@ public class ProductoService {
 
             log.debug("Buscando combinación producto-color: {} - {}", producto.getNombre(), color.getNombre());
             ProductoColor productoColor = productoColorRepository.findByProductoAndColor(producto, color)
-                    .orElseGet(() -> {
-                        log.debug("Creando nueva combinación producto-color");
-                        ProductoColor pc = new ProductoColor();
-                        pc.setProducto(producto);
-                        pc.setColor(color);
-                        pc.setTallas(new ArrayList<>());
-                        producto.getColores().add(pc);
-                        return productoColorRepository.save(pc);
-                    });
+            	    .orElseGet(() -> {
+            	        log.debug("Creando nueva combinación producto-color");
+            	        ProductoColor pc = new ProductoColor();
+            	        pc.setProducto(producto);
+            	        pc.setColor(color);
+            	        pc.setStockColor(0);
+            	        pc.setTallas(new ArrayList<>());
+            	        
+            	        if(producto.getColores() == null) {
+            	            producto.setColores(new ArrayList<>());
+            	        }
+            	        producto.getColores().add(pc);
+            	        
+            	        return productoColorRepository.save(pc);
+            	    });
 
             log.debug("Buscando combinación producto-talla: {} - {}", color.getNombre(), talla.getNombre());
             ProductoTalla productoTalla = productoTallaRepository.findByProductoColorAndTalla(productoColor, talla)

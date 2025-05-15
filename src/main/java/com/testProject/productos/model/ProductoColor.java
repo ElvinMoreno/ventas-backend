@@ -1,5 +1,6 @@
 package com.testProject.productos.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.*;
@@ -11,29 +12,33 @@ import lombok.NoArgsConstructor;
 @Table(name = "producto_colores")
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class ProductoColor {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "producto_id")
+    @JoinColumn(name = "producto_id", nullable = false)
     private Producto producto;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "color_id")
+    @JoinColumn(name = "color_id", nullable = false)
     private Color color;
 
     @Column(nullable = false)
-    private Integer stockColor; 
-    
+    private Integer stockColor = 0; // Inicialización por defecto
+
     @Column(name = "imagen_url", length = 255)
     private String imagenUrl;
 
     @OneToMany(mappedBy = "productoColor", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ProductoTalla> tallas;
-    
+    private List<ProductoTalla> tallas = new ArrayList<>();
+
+    public ProductoColor(Producto producto, Color color) {
+        this.producto = producto;
+        this.color = color;
+        this.stockColor = 0;
+    }
 
     public void actualizarStockColor() {
         this.stockColor = (tallas != null) ? 
