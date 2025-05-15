@@ -20,6 +20,8 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -52,6 +54,7 @@ public class ProductoService {
     private final TallaRepository tallaRepository;
     private final ProductoColorRepository productoColorRepository;
     private final ProductoTallaRepository productoTallaRepository;
+    private static final Logger log = LoggerFactory.getLogger(ProductoService.class);
 
     @Autowired
     public ProductoService(ProductoRepository productoRepository,
@@ -283,75 +286,102 @@ public class ProductoService {
     
     @Transactional
     public ProductoResponseDTO crearProductoConVariante(ProductoRequestDTO request) {
-       
-        Categoria categoria = categoriaRepository.findByNombre(request.getCategoria())
-                .orElseGet(() -> {
-                    Categoria nueva = new Categoria();
-                    nueva.setNombre(request.getCategoria());
-                    return categoriaRepository.save(nueva);
-                });
+        log.info("Iniciando creación de variante para producto: {}", request.getNombre());
+        
+        try {
+            log.debug("Buscando categoría: {}", request.getCategoria());
+            Categoria categoria = categoriaRepository.findByNombre(request.getCategoria())
+                    .orElseGet(() -> {
+                        log.debug("Creando nueva categoría: {}", request.getCategoria());
+                        Categoria nueva = new Categoria();
+                        nueva.setNombre(request.getCategoria());
+                        return categoriaRepository.save(nueva);
+                    });
 
-        Producto producto = productoRepository.findByNombreAndCategoria(request.getNombre(), categoria)
-                .orElseGet(() -> {
-                    Producto nuevo = new Producto();
-                    nuevo.setNombre(request.getNombre());
-                    nuevo.setCategoria(categoria);
-                    nuevo.setPrecio(request.getPrecio());
-                    nuevo.setColores(new ArrayList<>());
-                    return productoRepository.save(nuevo);
-                });
+            log.debug("Buscando producto: {} en categoría: {}", request.getNombre(), categoria.getNombre());
+            Producto producto = productoRepository.findByNombreAndCategoria(request.getNombre(), categoria)
+                    .orElseGet(() -> {
+                        log.debug("Creando nuevo producto: {}", request.getNombre());
+                        Producto nuevo = new Producto();
+                        nuevo.setNombre(request.getNombre());
+                        nuevo.setCategoria(categoria);
+                        nuevo.setPrecio(request.getPrecio());
+                        nuevo.setColores(new ArrayList<>());
+                        return productoRepository.save(nuevo);
+                    });
 
-        Color color = colorRepository.findByNombre(request.getColor())
-                .orElseGet(() -> {
-                    Color nuevo = new Color();
-                    nuevo.setNombre(request.getColor());
-                    return colorRepository.save(nuevo);
-                });
+            log.debug("Buscando color: {}", request.getColor());
+            Color color = colorRepository.findByNombre(request.getColor())
+                    .orElseGet(() -> {
+                        log.debug("Creando nuevo color: {}", request.getColor());
+                        Color nuevo = new Color();
+                        nuevo.setNombre(request.getColor());
+                        return colorRepository.save(nuevo);
+                    });
 
-        Talla talla = tallaRepository.findByNombre(request.getTalla())
-                .orElseGet(() -> {
-                    Talla nueva = new Talla();
-                    nueva.setNombre(request.getTalla());
-                    return tallaRepository.save(nueva);
-                });
+            log.debug("Buscando talla: {}", request.getTalla());
+            Talla talla = tallaRepository.findByNombre(request.getTalla())
+                    .orElseGet(() -> {
+                        log.debug("Creando nueva talla: {}", request.getTalla());
+                        Talla nueva = new Talla();
+                        nueva.setNombre(request.getTalla());
+                        return tallaRepository.save(nueva);
+                    });
 
-      
-        ProductoColor productoColor = productoColorRepository.findByProductoAndColor(producto, color)
-                .orElseGet(() -> {
-                    ProductoColor pc = new ProductoColor();
-                    pc.setProducto(producto);
-                    pc.setColor(color);
-                    producto.getColores().add(pc);
-                    return productoColorRepository.save(pc);
-                });
+            log.debug("Buscando combinación producto-color: {} - {}", producto.getNombre(), color.getNombre());
+            ProductoColor productoColor = productoColorRepository.findByProductoAndColor(producto, color)
+                    .orElseGet(() -> {
+                        log.debug("Creando nueva combinación producto-color");
+                        ProductoColor pc = new ProductoColor();
+                        pc.setProducto(producto);
+                        pc.setColor(color);
+                        pc.setTallas(new ArrayList<>());
+                        producto.getColores().add(pc);
+                        return productoColorRepository.save(pc);
+                    });
 
-        ProductoTalla productoTalla = productoTallaRepository.findByProductoColorAndTalla(productoColor, talla)
-                .orElseGet(() -> {
-                    ProductoTalla pt = new ProductoTalla();
-                    pt.setProductoColor(productoColor);
-                    pt.setTalla(talla);
-                    pt.setStock(0); 
-                    if(productoColor.getTallas() == null) {
-                        productoColor.setTallas(new ArrayList<>());
-                    }
-                    productoColor.getTallas().add(pt);
-                    return productoTallaRepository.save(pt);
-                });
+            log.debug("Buscando combinación producto-talla: {} - {}", color.getNombre(), talla.getNombre());
+            ProductoTalla productoTalla = productoTallaRepository.findByProductoColorAndTalla(productoColor, talla)
+                    .orElseGet(() -> {
+                        log.debug("Creando nueva combinación producto-talla");
+                        ProductoTalla pt = new ProductoTalla();
+                        pt.setProductoColor(productoColor);
+                        pt.setTalla(talla);
+                        pt.setStock(0);
+                        
+                        if(productoColor.getTallas() == null) {
+                            productoColor.setTallas(new ArrayList<>());
+                        }
+                        productoColor.getTallas().add(pt);
+                        
+                        return productoTallaRepository.save(pt);
+                    });
 
-        productoTalla.setStock(productoTalla.getStock() + request.getStock());
-        productoTallaRepository.save(productoTalla);
+            int nuevoStock = productoTalla.getStock() + request.getStock();
+            log.debug("Actualizando stock de {} de {} a {}", 
+                    productoTalla.getId(), productoTalla.getStock(), nuevoStock);
+            productoTalla.setStock(nuevoStock);
+            productoTallaRepository.save(productoTalla);
 
-        productoColor.actualizarStockColor();
-        producto.actualizarStockTotal();
+            productoColor.actualizarStockColor();
+            producto.actualizarStockTotal();
 
-        return new ProductoResponseDTO(
-                producto.getNombre(),
-                producto.getPrecio(),
-                producto.getCategoria().getNombre(),
-                color.getNombre(),
-                talla.getNombre(),
-                productoTalla.getStock()
-        );
+            log.info("Variante creada exitosamente. Stock actualizado para {} {} {}: {}", 
+                    producto.getNombre(), color.getNombre(), talla.getNombre(), nuevoStock);
+
+            return new ProductoResponseDTO(
+                    producto.getNombre(),
+                    producto.getPrecio(),
+                    producto.getCategoria().getNombre(),
+                    color.getNombre(),
+                    talla.getNombre(),
+                    productoTalla.getStock()
+            );
+
+        } catch (Exception e) {
+            log.error("Error al crear variante para producto {}: {}", request.getNombre(), e.getMessage(), e);
+            throw new RuntimeException("Error al crear variante: " + e.getMessage(), e);
+        }
     }
 
     private ProductoCompletoDTO mapearProductoADTO(Producto producto) {

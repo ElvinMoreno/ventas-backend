@@ -11,26 +11,27 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductoTalla {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	 @Id
+	    @GeneratedValue(strategy = GenerationType.IDENTITY)
+	    private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "producto_color_id")
-    private ProductoColor productoColor;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "talla_id")
-    private Talla talla;
+	    @ManyToOne(fetch = FetchType.LAZY)
+	    @JoinColumn(name = "producto_color_id", nullable = false)
+	    private ProductoColor productoColor;
 
-    @Column(nullable = false)
-    private Integer stock = 0;
-    
-    public ProductoTalla(ProductoColor productoColor, Talla talla, Integer stock) {
-        this.productoColor = productoColor;
-        this.talla = talla;
-        this.stock = stock != null ? stock : 0;
-    }
+	    @ManyToOne(fetch = FetchType.LAZY)
+	    @JoinColumn(name = "talla_id", nullable = false)
+	    private Talla talla;
+
+	    @Column(nullable = false)
+	    private Integer stock = 0; 
+
+	   
+	    public ProductoTalla(ProductoColor productoColor, Talla talla, Integer stock) {
+	        this.productoColor = productoColor;
+	        this.talla = talla;
+	        this.stock = stock != null ? stock : 0;
+	    }
     
     public void reducirStock(Integer cantidad) {
         if (this.stock >= cantidad) {
