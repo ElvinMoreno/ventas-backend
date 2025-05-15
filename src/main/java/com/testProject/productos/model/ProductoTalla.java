@@ -24,7 +24,13 @@ public class ProductoTalla {
     private Talla talla;
 
     @Column(nullable = false)
-    private Integer stock;
+    private Integer stock = 0;
+    
+    public ProductoTalla(ProductoColor productoColor, Talla talla, Integer stock) {
+        this.productoColor = productoColor;
+        this.talla = talla;
+        this.stock = stock != null ? stock : 0;
+    }
     
     public void reducirStock(Integer cantidad) {
         if (this.stock >= cantidad) {

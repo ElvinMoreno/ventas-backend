@@ -330,6 +330,10 @@ public class ProductoService {
                     ProductoTalla pt = new ProductoTalla();
                     pt.setProductoColor(productoColor);
                     pt.setTalla(talla);
+                    pt.setStock(0); 
+                    if(productoColor.getTallas() == null) {
+                        productoColor.setTallas(new ArrayList<>());
+                    }
                     productoColor.getTallas().add(pt);
                     return productoTallaRepository.save(pt);
                 });
