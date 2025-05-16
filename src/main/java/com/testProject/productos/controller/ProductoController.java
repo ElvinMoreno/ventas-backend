@@ -76,8 +76,11 @@ public class ProductoController {
             
             ProductoConsultaDTO resultado = productoService.consultarPrenda(filtro);
             return ResponseEntity.ok(ApiResponseDTO.success(resultado));
+            
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(ApiResponseDTO.notFound(e.getMessage()));
+            return ResponseEntity.badRequest()
+                    .body(ApiResponseDTO.notFound(e.getMessage()));
+                    
         } catch (RuntimeException e) {
             return ResponseEntity.ok(ApiResponseDTO.notFound(e.getMessage()));
         }

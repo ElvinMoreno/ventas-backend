@@ -131,16 +131,67 @@ public class ProductoService {
         validarFiltro(filtro);
         
         if (soloNombre(filtro)) {
-            return consultarPorNombre(filtro.getNombre());
+            return consultarPorNombre(filtro.getNombreNormalizado());
         }
         
-        List<ProductoTalla> variantes = buscarVariantes(filtro);
+        List<ProductoTalla> variantes = buscarVariantesAvanzado(filtro);
         
         if (variantes.isEmpty()) {
             throw new RuntimeException("No se encontraron prendas con los filtros especificados");
         }
         
         return construirRespuesta(filtro, variantes);
+    }
+    
+    private List<ProductoTalla> buscarVariantesAvanzado(FiltroPrenda filtro) {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<ProductoTalla> cq = cb.createQuery(ProductoTalla.class);
+        Root<ProductoTalla> root = cq.from(ProductoTalla.class);
+      
+        List<jakarta.persistence.criteria.Predicate> predicates = new ArrayList<>();
+        
+        String[] palabrasNombre = filtro.getNombreNormalizado().split("\\s+");
+        List<jakarta.persistence.criteria.Predicate> nombrePredicates = new ArrayList<>();
+        
+        for (String palabra : palabrasNombre) {
+            nombrePredicates.add(cb.like(
+                cb.lower(root.get("productoColor").get("producto").get("nombre")),
+                "%" + palabra + "%"
+            ));
+        }
+       
+        jakarta.persistence.criteria.Predicate[] nombrePredicatesArray = 
+            nombrePredicates.toArray(new jakarta.persistence.criteria.Predicate[0]);
+        
+        predicates.add(cb.and(nombrePredicatesArray));
+        
+        if (filtro.tieneCategoria()) {
+            predicates.add(cb.equal(
+                cb.lower(root.get("productoColor").get("producto").get("categoria").get("nombre")),
+                filtro.getCategoriaNormalizada()
+            ));
+        }
+        
+        if (filtro.tieneTalla()) {
+            predicates.add(cb.equal(
+                cb.lower(root.get("talla").get("nombre")),
+                filtro.getTallaNormalizada()
+            ));
+        }
+        
+        if (filtro.tieneColor()) {
+            predicates.add(cb.equal(
+                cb.lower(root.get("productoColor").get("color").get("nombre")),
+                filtro.getColorNormalizado()
+            ));
+        }
+        
+        
+        jakarta.persistence.criteria.Predicate[] predicatesArray = 
+            predicates.toArray(new jakarta.persistence.criteria.Predicate[0]);
+        
+        cq.where(cb.and(predicatesArray));
+        return entityManager.createQuery(cq).getResultList();
     }
     
     private void validarFiltro(FiltroPrenda filtro) {
@@ -199,14 +250,18 @@ public class ProductoService {
         return entityManager.createQuery(cq).getResultList();
     }
     
-    private ProductoConsultaDTO consultarPorNombre(String nombre) {
-        List<Producto> productos = productoRepository.findByNombreExacto(nombre);
+    private ProductoConsultaDTO consultarPorNombre(String nombreNormalizado) {
+        List<Producto> productos = productoRepository.findByNombreConteniendo(nombreNormalizado);
+        
+        if (productos.isEmpty()) {
+            throw new RuntimeException("No se encontraron productos con ese nombre");
+        }
         
         ProductoConsultaDTO dto = new ProductoConsultaDTO();
-        dto.setNombre(nombre);
+        dto.setNombre(productos.get(0).getNombre());
         dto.setPrecio(productos.get(0).getPrecio());
 
-        List<ProductoTalla> variantes = productoTallaRepository.findByProductoNombre(nombre);
+        List<ProductoTalla> variantes = productoTallaRepository.findByProductoNombreConteniendo(nombreNormalizado);
         
         extraerDatosDisponibles(dto, variantes);
         return dto;
