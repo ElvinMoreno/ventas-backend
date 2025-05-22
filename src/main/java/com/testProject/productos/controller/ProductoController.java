@@ -15,6 +15,7 @@ import com.testProject.productos.dto.ProductoConsultaDTO;
 import com.testProject.productos.dto.ProductoImagenDTO;
 import com.testProject.productos.dto.ProductoRequestDTO;
 import com.testProject.productos.dto.ProductoResponseDTO;
+import com.testProject.productos.dto.ProductoTallaResponseDTO;
 import com.testProject.productos.model.Producto;
 import com.testProject.productos.service.ProductoService;
 
@@ -127,5 +128,16 @@ public class ProductoController {
         }
     }
        
+    @GetMapping("/producto-talla")
+    public ResponseEntity<ApiResponseDTO<List<ProductoTallaResponseDTO>>> obtenerTodosProductoTalla() {
+        try {
+            List<ProductoTallaResponseDTO> resultados = productoService.obtenerTodosProductoTallaCompleto();
+            return ResponseEntity.ok(ApiResponseDTO.success(resultados));
+        } catch (Exception e) {
+            log.error("Error al obtener todos los productoTalla: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponseDTO.notFound("Error al obtener todos los productoTalla"));
+        }
+    }
  
 }

@@ -20,7 +20,7 @@ public class Chat {
     private Long id;
     
     @Column(nullable = false, unique = true)
-    private String chatId; // ID único de WaAPI
+    private String chatId; 
     
     @Column(nullable = false)
     private LocalDateTime createdAt;

@@ -29,4 +29,3 @@ public class ChatMessageResponseDTO {
      this.chatId = message.getChat().getChatId();
  }
 }
-

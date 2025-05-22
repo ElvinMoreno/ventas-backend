@@ -8,9 +8,12 @@ import com.testProject.productos.dto.FiltroPrenda;
 import com.testProject.productos.dto.ProductoCompletoDTO;
 import com.testProject.productos.dto.ProductoCompletoDTO.VarianteDTO;
 import com.testProject.productos.dto.ProductoConsultaDTO;
+import com.testProject.productos.dto.ProductoDTO;
 import com.testProject.productos.dto.ProductoImagenDTO;
 import com.testProject.productos.dto.ProductoRequestDTO;
 import com.testProject.productos.dto.ProductoResponseDTO;
+import com.testProject.productos.dto.ProductoTallaResponseDTO;
+import com.testProject.productos.dto.TallaDTO;
 import com.testProject.productos.model.*;
 import com.testProject.productos.repository.*;
 
@@ -491,6 +494,11 @@ public class ProductoService {
     }
 
 
-
+    public List<ProductoTallaResponseDTO> obtenerTodosProductoTallaCompleto() {
+        List<ProductoTalla> productoTallas = productoTallaRepository.findAll();
+        return productoTallas.stream()
+                .map(ProductoTallaResponseDTO::new)  
+                .collect(Collectors.toList());
+    }
 
 }

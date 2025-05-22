@@ -4,7 +4,10 @@ package com.testProject.productos.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
 import org.springframework.data.domain.PageRequest;
@@ -26,6 +29,8 @@ import jakarta.transaction.Transactional;
 @Service
 @Transactional
 public class ChatService {
+	
+	private static final Logger log = LoggerFactory.getLogger(ChatService.class);
     private final ChatRepository chatRepository;
     private final ChatMessageRepository chatMessageRepository;
     
@@ -48,14 +53,22 @@ public class ChatService {
     
     @Transactional
     public ChatMessageResponseDTO saveInboundMessage(String chatId, String messageContent) {
-        Chat chat = getOrCreateChat(chatId);
-        ChatMessage message = new ChatMessage();
-        message.setChat(chat);
-        message.setContent(messageContent);
-        message.setDirection(MessageDirection.INBOUND);
-        message.setStatus(MessageStatus.RECEIVED);
-        chatMessageRepository.save(message);
-        return new ChatMessageResponseDTO(message);
+        try {
+            Chat chat = getOrCreateChat(chatId);
+            
+            ChatMessage message = new ChatMessage();
+            message.setChat(chat);
+            message.setContent(messageContent);
+            message.setDirection(MessageDirection.INBOUND);
+            message.setStatus(MessageStatus.RECEIVED);
+         
+            message = chatMessageRepository.saveAndFlush(message);
+            
+            return new ChatMessageResponseDTO(message);
+        } catch (DataAccessException e) {
+            log.error("Database error saving inbound message for chat: {}", chatId, e);
+            throw new RuntimeException("Failed to save message", e);
+        }
     }
     
     public ChatMessage saveOutboundMessage(String chatId, String message) {
