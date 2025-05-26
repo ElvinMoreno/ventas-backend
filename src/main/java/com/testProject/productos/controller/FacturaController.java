@@ -11,9 +11,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.testProject.productos.dto.ApiResponseDTO;
 import com.testProject.productos.dto.FacturaRequest;
 import com.testProject.productos.dto.FacturaResponseDTO;
+import com.testProject.productos.dto.PagoPendienteDetalladoDTO;
+import com.testProject.productos.dto.PagoPendienteResponseDTO;
 import com.testProject.productos.model.Factura;
 import com.testProject.productos.service.FacturacionService;
 
@@ -41,5 +44,38 @@ public class FacturaController {
             @PathVariable String cedula) {
         List<FacturaResponseDTO> facturas = facturacionService.obtenerFacturasPorCliente(cedula);
         return ResponseEntity.ok(ApiResponseDTO.success(facturas));
+    }
+    
+    @PostMapping("/pago-pendiente")
+    public ResponseEntity<ApiResponseDTO<PagoPendienteResponseDTO>> crearPagoPendiente(
+            @Valid @RequestBody FacturaRequest request) {
+        try {
+            PagoPendienteResponseDTO pago = facturacionService.crearPagoPendiente(request);
+            return ResponseEntity.ok(ApiResponseDTO.success(pago));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Error al procesar la solicitud", e);
+        }
+    }
+
+    @GetMapping("/pago-pendiente/{codigoTransaccion}")
+    public ResponseEntity<ApiResponseDTO<PagoPendienteDetalladoDTO>> obtenerDatosPagoPendiente(
+            @PathVariable String codigoTransaccion) {
+        try {
+            PagoPendienteDetalladoDTO datos = facturacionService.obtenerDatosPagoPendiente(codigoTransaccion);
+            return ResponseEntity.ok(ApiResponseDTO.success(datos));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Error al recuperar los datos del pago", e);
+        }
+    }
+
+    @PostMapping("/completar-pago/{codigoTransaccion}")
+    public ResponseEntity<ApiResponseDTO<FacturaResponseDTO>> completarPago(
+            @PathVariable String codigoTransaccion) {
+        try {
+            FacturaResponseDTO factura = facturacionService.completarPago(codigoTransaccion);
+            return ResponseEntity.ok(ApiResponseDTO.success(factura));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Error al completar el pago", e);
+        }
     }
 }
