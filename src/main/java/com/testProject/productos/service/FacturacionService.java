@@ -65,7 +65,7 @@ public class FacturacionService {
                     nuevo.setNombre(request.getNombreCliente());
                     nuevo.setApellido(request.getApellidoCliente());
                     nuevo.setCedula(request.getCedulaCliente());
-                    nuevo.setDireccion(request.getDireccionCliente());
+                    nuevo.setDireccion(request.getDireccionCliente()); 
                     return clienteRepository.save(nuevo);
                 });
 

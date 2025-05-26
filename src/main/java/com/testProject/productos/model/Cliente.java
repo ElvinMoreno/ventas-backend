@@ -34,7 +34,7 @@ public class Cliente {
     @Column(nullable = false, unique = true, length = 20)
     private String cedula;
 
-    @Column(nullable = false, length = 200)
+    @Column(nullable = true, length = 200)
     private String direccion;
 
     @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL, orphanRemoval = true)

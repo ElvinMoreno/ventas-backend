@@ -17,7 +17,6 @@ public class FacturaRequest {
     @NotBlank
     private String cedulaCliente;
     
-    @NotBlank
     private String direccionCliente;
     
     private String direccionEnvio;
