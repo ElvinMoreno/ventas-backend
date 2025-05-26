@@ -21,4 +21,8 @@ public class ApiResponseDTO<T> {
     public static <T> ApiResponseDTO<T> notFound(String entityName) {
         return new ApiResponseDTO<>(false, entityName + " no encontrado", null);
     }
+    
+    public static <T> ApiResponseDTO<T> error(String errorMessage) {
+        return new ApiResponseDTO<>(false, errorMessage, null);
+    }
 }

@@ -3,6 +3,7 @@ package com.testProject.productos.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -64,7 +65,18 @@ public class FacturaController {
             PagoPendienteDetalladoDTO datos = facturacionService.obtenerDatosPagoPendiente(codigoTransaccion);
             return ResponseEntity.ok(ApiResponseDTO.success(datos));
         } catch (JsonProcessingException e) {
-            throw new RuntimeException("Error al recuperar los datos del pago", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponseDTO.error("Error al procesar los datos del pago"));
+        } catch (RuntimeException e) {
+            if (e.getMessage().equals("Pago pendiente no encontrado")) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponseDTO.notFound("Pago pendiente"));
+            } else if (e.getMessage().equals("Producto no encontrado")) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                        .body(ApiResponseDTO.error("Uno o más productos no están disponibles"));
+            }
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponseDTO.error("Error inesperado"));
         }
     }
 
