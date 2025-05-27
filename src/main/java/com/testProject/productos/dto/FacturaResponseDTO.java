@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 public class FacturaResponseDTO {
     private Long id;
     private String numeroFactura;
+    private String codigoTransaccion;
     private LocalDateTime fechaEmision;
     private ClienteDTO cliente;
     private EnvioDTO envio;
@@ -22,9 +23,24 @@ public class FacturaResponseDTO {
     private Double totalImpuestos;
     private Double total;
 
+    public FacturaResponseDTO(Factura factura, String codigoTransaccion) {
+        this.id = factura.getId();
+        this.numeroFactura = factura.getNumeroFactura();
+        this.codigoTransaccion = codigoTransaccion;
+        this.fechaEmision = factura.getFechaEmision();
+        this.cliente = new ClienteDTO(factura.getCliente());
+        this.envio = factura.getEnvio() != null ? new EnvioDTO(factura.getEnvio()) : null;
+        this.detalles = factura.getDetalles().stream()
+                .map(DetalleFacturaDTO::new)
+                .collect(Collectors.toList());
+        this.subtotal = factura.getSubtotal();
+        this.totalImpuestos = factura.getTotalImpuestos();
+        this.total = factura.getTotal();
+    }
     public FacturaResponseDTO(Factura factura) {
         this.id = factura.getId();
         this.numeroFactura = factura.getNumeroFactura();
+        this.codigoTransaccion = codigoTransaccion;
         this.fechaEmision = factura.getFechaEmision();
         this.cliente = new ClienteDTO(factura.getCliente());
         this.envio = factura.getEnvio() != null ? new EnvioDTO(factura.getEnvio()) : null;

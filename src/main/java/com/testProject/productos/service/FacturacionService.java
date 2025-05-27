@@ -181,12 +181,56 @@ public class FacturacionService {
         }
         
         FacturaRequest request = objectMapper.readValue(pago.getDatosFactura(), FacturaRequest.class);
-        FacturaResponseDTO factura = crearFactura(request);
+        Factura facturaGuardada = crearFacturaEntity(request); 
         
         pago.setEstado(EstadoPago.COMPLETADO);
         pagoPendienteRepository.save(pago);
         
-        return factura;
+        return new FacturaResponseDTO(facturaGuardada, pago.getCodigoTransaccion());
+    }
+    
+    private Factura crearFacturaEntity(FacturaRequest request) {
+        Cliente cliente = clienteRepository.findByCedula(request.getCedulaCliente())
+                .orElseGet(() -> {
+                    Cliente nuevo = new Cliente();
+                    nuevo.setNombre(request.getNombreCliente());
+                    nuevo.setApellido(request.getApellidoCliente());
+                    nuevo.setCedula(request.getCedulaCliente());
+                    nuevo.setDireccion(request.getDireccionCliente());
+                    return clienteRepository.save(nuevo);
+                });
+
+        Factura factura = new Factura();
+        factura.setNumeroFactura(generarNumeroFactura());
+        factura.setCliente(cliente);
+        factura.setDetalles(new ArrayList<>());
+
+        if (request.getPrecioEnvio() != null && request.getPrecioEnvio() > 0) {
+            Envio envio = new Envio();
+            envio.setUbicacion(request.getDireccionEnvio());
+            envio.setPrecio(request.getPrecioEnvio());
+            factura.setEnvio(envioRepository.save(envio));
+        }
+
+        for (DetalleFacturaRequest detalleReq : request.getDetalles()) {
+            ProductoTalla productoTalla = productoTallaRepository.findById(detalleReq.getProductoTallaId())
+                    .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+
+            DetalleFactura detalle = new DetalleFactura();
+            detalle.setProductoTalla(productoTalla);
+            detalle.setCantidad(detalleReq.getCantidad());
+            detalle.setPrecioUnitario(productoTalla.getProductoColor().getProducto().getPrecio());
+            detalle.setDescuento(detalleReq.getDescuento() != null ? detalleReq.getDescuento() : 0.0);
+            detalle.calcularSubtotal(); 
+            
+            factura.agregarDetalle(detalle);
+            
+            productoTalla.reducirStock(detalleReq.getCantidad());
+            productoTallaRepository.save(productoTalla);
+        }
+
+        factura.calcularTotales();
+        return facturaRepository.save(factura);
     }
     
     public PagoPendienteResponseDTO crearPagoPendiente(FacturaRequest request) throws JsonProcessingException {
