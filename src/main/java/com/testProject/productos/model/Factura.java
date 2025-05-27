@@ -71,7 +71,7 @@ public class Factura {
                 .sum() : 
             0.0;
 
-        this.totalImpuestos = this.subtotal;
+      this.totalImpuestos = 0.0;
 
         double costoEnvio = (this.envio != null && this.envio.getPrecio() != null) ? 
                           this.envio.getPrecio() : 0.0;
