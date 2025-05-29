@@ -119,7 +119,7 @@ public class FacturacionService {
     
     public PagoPendienteDetalladoDTO obtenerDatosPagoPendiente(String codigoTransaccion) throws JsonProcessingException {
         PagoPendiente pago = pagoPendienteRepository.findByCodigoTransaccion(codigoTransaccion)
-                .orElseThrow(() -> new RuntimeException("Pago pendiente no encontrado"));
+        .orElseThrow(() -> new RuntimeException("código " + codigoTransaccion + " no existe"));
         
         FacturaRequest request = objectMapper.readValue(pago.getDatosFactura(), FacturaRequest.class);
         
@@ -127,7 +127,7 @@ public class FacturacionService {
         clienteDTO.setNombre(request.getNombreCliente());
         clienteDTO.setApellido(request.getApellidoCliente());
         clienteDTO.setCedula(request.getCedulaCliente());
-        clienteDTO.setDireccion(request.getDireccionCliente());
+        clienteDTO.setDireccion(request.getDireccionCliente());        
        
         EnvioDTO envioDTO = null;
         if (request.getPrecioEnvio() != null && request.getPrecioEnvio() > 0) {
@@ -141,7 +141,7 @@ public class FacturacionService {
         
         for (DetalleFacturaRequest detalleReq : request.getDetalles()) {
             ProductoTalla productoTalla = productoTallaRepository.findById(detalleReq.getProductoTallaId())
-                    .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+                    .orElseThrow(() -> new RuntimeException("Producto con ID " + detalleReq.getProductoTallaId() + " no encontrado"));
             
             double precioUnitario = productoTalla.getProductoColor().getProducto().getPrecio();
             double descuento = detalleReq.getDescuento() != null ? detalleReq.getDescuento() : 0.0;

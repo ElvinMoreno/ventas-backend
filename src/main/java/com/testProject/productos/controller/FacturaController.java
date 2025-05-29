@@ -62,10 +62,23 @@ public class FacturaController {
     public ResponseEntity<ApiResponseDTO<PagoPendienteDetalladoDTO>> obtenerDatosPagoPendiente(
             @PathVariable String codigoTransaccion) {
         try {
+            if (!codigoTransaccion.startsWith("PAG-")) {
+                return ResponseEntity.badRequest()
+                        .body(ApiResponseDTO.error("El código de transacción debe comenzar con PAG-"));
+            }
+            
             PagoPendienteDetalladoDTO datos = facturacionService.obtenerDatosPagoPendiente(codigoTransaccion);
             return ResponseEntity.ok(ApiResponseDTO.success(datos));
         } catch (JsonProcessingException e) {
-            throw new RuntimeException("Error al recuperar los datos del pago", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponseDTO.error("Error al procesar los datos del pago"));
+        } catch (RuntimeException e) {
+            if (e.getMessage().startsWith("código ")) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponseDTO.error(e.getMessage()));
+            }
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponseDTO.error("Error inesperado: " + e.getMessage()));
         }
     }
 
