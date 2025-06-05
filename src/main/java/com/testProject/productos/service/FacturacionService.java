@@ -1,7 +1,9 @@
 package com.testProject.productos.service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -118,6 +120,24 @@ public class FacturacionService {
     
     
     public PagoPendienteDetalladoDTO obtenerDatosPagoPendiente(String codigoTransaccion) throws JsonProcessingException {
+
+        Optional<PagoPendiente> pagoOpt = pagoPendienteRepository.findByCodigoTransaccion(codigoTransaccion);
+        
+        if (!pagoOpt.isPresent()) {
+            PagoPendiente dummyPago = new PagoPendiente();
+            dummyPago.setCodigoTransaccion(codigoTransaccion);
+            dummyPago.setEstado(EstadoPago.RECHAZADO);
+            
+            return new PagoPendienteDetalladoDTO(
+                dummyPago,
+                null, 
+                null, 
+                Collections.emptyList(), 
+                0.0, 
+                0.0 
+            );
+        }
+        
         PagoPendiente pago = pagoPendienteRepository.findByCodigoTransaccion(codigoTransaccion)
         .orElseThrow(() -> new RuntimeException("código " + codigoTransaccion + " no existe"));
         

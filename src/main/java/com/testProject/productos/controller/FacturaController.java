@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.testProject.productos.dto.ApiResponseDTO;
+import com.testProject.productos.dto.EstadoPago;
 import com.testProject.productos.dto.FacturaRequest;
 import com.testProject.productos.dto.FacturaResponseDTO;
 import com.testProject.productos.dto.PagoPendienteDetalladoDTO;
@@ -63,22 +64,20 @@ public class FacturaController {
             @PathVariable String codigoTransaccion) {
         try {
             if (!codigoTransaccion.startsWith("PAG-")) {
-                return ResponseEntity.badRequest()
-                        .body(ApiResponseDTO.error("El código de transacción debe comenzar con PAG-"));
+                return ResponseEntity.ok(ApiResponseDTO.error("El código debe comenzar con PAG-"));
             }
             
             PagoPendienteDetalladoDTO datos = facturacionService.obtenerDatosPagoPendiente(codigoTransaccion);
+            
+            if (datos.getEstado() == EstadoPago.RECHAZADO && datos.getDetalles().isEmpty()) {
+                return ResponseEntity.ok(ApiResponseDTO.error("código " + codigoTransaccion + " no existe"));
+            }
+            
             return ResponseEntity.ok(ApiResponseDTO.success(datos));
         } catch (JsonProcessingException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDTO.error("Error al procesar los datos del pago"));
+            return ResponseEntity.ok(ApiResponseDTO.error("Error al procesar los datos del pago"));
         } catch (RuntimeException e) {
-            if (e.getMessage().startsWith("código ")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(ApiResponseDTO.error(e.getMessage()));
-            }
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDTO.error("Error inesperado: " + e.getMessage()));
+            return ResponseEntity.ok(ApiResponseDTO.error("Error inesperado: " + e.getMessage()));
         }
     }
 
